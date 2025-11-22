@@ -4,32 +4,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - Space Theme</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: Poppins, sans-serif;
+            background: radial-gradient(circle at 20% 20%, #2b1055, #000015 80%),
+                url("https://i.ibb.co/2SqcZ9K/stars2.png");
+            background-size: cover;
+            color: #e8f7ff;
+            min-height: 100vh;
+        }
+
+        .glow {
+            text-shadow: 0 0 10px #5cd3ff, 0 0 20px #5cd3ff;
+        }
+
+        .glass {
+            background: rgba(20, 20, 40, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 25px rgba(120, 0, 255, 0.4),
+                0 0 40px rgba(0, 189, 255, 0.2);
+            backdrop-filter: blur(12px);
+        }
+
+        table th {
+            color: #9ddcff;
+            text-shadow: 0 0 7px #5cd3ff;
+        }
+
+        table td {
+            color: #d6f2ff;
+        }
+
+        .btn-delete {
+            background: linear-gradient(90deg, #ff0033, #ff006e);
+            box-shadow: 0 0 12px rgba(255, 0, 80, 0.7);
+        }
+
+        .btn-delete:hover {
+            transform: scale(1.07);
+            box-shadow: 0 0 20px rgba(255, 0, 140, 0.9);
+        }
+
+        .btn-logout {
+            background: linear-gradient(90deg, #4d00ff, #00b7ff);
+            box-shadow: 0 0 12px rgba(0, 149, 255, 0.6);
+        }
+
+        .btn-logout:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 22px rgba(0, 170, 255, 0.8);
+        }
+    </style>
 </head>
 
-<body class="bg-pink-50 min-h-screen flex flex-col items-center p-6">
+<body class="flex flex-col items-center p-6">
 
-    <h1 class="text-3xl font-bold mb-6 text-pink-600">Admin Dashboard</h1>
+    <h1 class="text-4xl font-bold mb-8 text-cyan-200 glow">🌌 Admin Dashboard</h1>
 
-    <div class="w-full max-w-5xl bg-white shadow-lg rounded-xl p-6">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-pink-100">
+    <div class="w-full max-w-6xl p-6 rounded-xl glass">
+
+        <table class="min-w-full divide-y divide-blue-300/30">
+            <thead>
                 <tr>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">ID</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Firstname</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Lastname</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Email</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">API Key</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Status</th>
-                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Action</th>
+                    <th class="px-4 py-2">ID</th>
+                    <th class="px-4 py-2">Firstname</th>
+                    <th class="px-4 py-2">Lastname</th>
+                    <th class="px-4 py-2">Email</th>
+                    <th class="px-4 py-2">API Key</th>
+                    <th class="px-4 py-2">Status</th>
+                    <th class="px-4 py-2">Action</th>
                 </tr>
             </thead>
-            <tbody id="table-body" class="divide-y divide-gray-100"></tbody>
+
+            <tbody id="table-body" class="divide-y divide-white/10"></tbody>
         </table>
 
         <button onclick="logout()"
-            class="mt-4 px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 transition">Logout</button>
+            class="mt-6 px-6 py-3 text-white rounded-lg btn-logout transition">
+            🚀 Logout
+        </button>
+
     </div>
 
     <script>
@@ -45,21 +104,30 @@
 
                     const statusColor =
                         user.status === 'on'
-                            ? 'bg-green-200 text-green-800'
-                            : 'bg-red-200 text-red-800';
+                            ? 'bg-green-400/20 text-green-300 border border-green-400/40'
+                            : 'bg-red-400/20 text-red-300 border border-red-400/40';
 
                     tr.innerHTML = `
-                        <td class="px-4 py-2">${user.id}</td>
-                        <td class="px-4 py-2">${user.firstname}</td>
-                        <td class="px-4 py-2">${user.lastname}</td>
-                        <td class="px-4 py-2">${user.email}</td>
-                        <td class="px-4 py-2 break-words max-w-xs">${user.apiKey || '—'}</td>
-                        <td class="px-4 py-2 font-bold ${statusColor} rounded text-center">${user.status}</td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-3">${user.id}</td>
+                        <td class="px-4 py-3">${user.firstname}</td>
+                        <td class="px-4 py-3">${user.lastname}</td>
+                        <td class="px-4 py-3">${user.email}</td>
+
+                        <!-- FIXED: gunakan user.api_key (bukan user.apiKey) -->
+                        <td class="px-4 py-3 break-words max-w-xs">${user.api_key || '—'}</td>
+
+                        <td class="px-4 py-3 text-center rounded-lg font-semibold ${statusColor}">
+                            ${user.status}
+                        </td>
+
+                        <td class="px-4 py-3">
                             <button onclick="deleteUser(${user.id})"
-                                class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">Hapus</button>
+                                class="px-4 py-2 text-white rounded-lg btn-delete transition">
+                                Hapus
+                            </button>
                         </td>
                     `;
+
                     tbody.appendChild(tr);
                 });
             } catch (err) {
@@ -68,7 +136,7 @@
         }
 
         async function deleteUser(userId) {
-            if (!confirm("Yakin ingin hapus user ini?")) return;
+            if (!confirm("Yakin ingin menghapus user ini?")) return;
 
             const res = await fetch(`/admin/user/${userId}`, { method: 'DELETE' });
             const data = await res.json();

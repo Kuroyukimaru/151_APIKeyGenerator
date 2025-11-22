@@ -3,12 +3,14 @@ const crypto = require('crypto');
 const path = require('path');
 const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
+const cors = require('cors');
 
 const app = express();
 
 /* =============================
    MIDDLEWARE
 ============================= */
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -25,114 +27,100 @@ const db = mysql.createConnection({
 
 db.connect(err => {
   if (err) {
-    console.error('❌ Gagal terhubung DB:', err);
+    console.error("❌ Gagal konek DB:", err);
     return;
   }
-  console.log('✅ MySQL Connected');
+  console.log("✅ Database connected!");
 });
 
 /* =============================
-   FUNGSI GENERATE API KEY
+   GENERATE API KEY
 ============================= */
 function generateApiKey() {
-  return `sk-sm-v1-${crypto.randomBytes(8).toString('hex')}`;
+  return `sk-sm-v1-${crypto.randomBytes(16).toString("hex")}`;
 }
 
 /* =============================
-   ROUTE: GENERATE + SIMPAN API KEY
+   ROUTE: CREATE API KEY
 ============================= */
 app.post('/create', (req, res) => {
   const apiKey = generateApiKey();
 
-  const sql = `INSERT INTO api_keys (api_key, created_at, status)
-               VALUES (?, NOW(), "active")`;
+  const sql = `
+    INSERT INTO api_keys(api_key, created_at, status)
+    VALUES(?, NOW(), 'active')
+  `;
 
   db.query(sql, [apiKey], (err, result) => {
-    if (err) return res.status(500).json({ success: false, msg: "Gagal simpan API key" });
+    if (err) return res.status(500).json({ success: false, error: err });
 
-    res.json({ success: true, apiKey, apiKeyId: result.insertId });
+    res.json({
+      success: true,
+      apiKey,
+      apiKeyId: result.insertId
+    });
   });
 });
 
 /* =============================
-   ROUTE: SAVE USER (DISAMAKAN DENGAN DB)
+   ROUTE: SIMPAN USER
 ============================= */
 app.post('/user/create', async (req, res) => {
-  const { firstname, lastname, email, apikey, password } = req.body;
+  const { firstname, lastname, email, apikey } = req.body;
 
-  if (!firstname || !lastname || !email || !apikey || !password)
-    return res.status(400).json({ error: "Semua kolom wajib diisi" });
+  if (!firstname || !lastname || !email || !apikey) {
+    return res.status(400).json({ error: "Semua kolom harus diisi" });
+  }
 
-  const hashed = await bcrypt.hash(password, 10);
+  // Password default (karena tabel users butuh password)
+  const defaultPassword = await bcrypt.hash("default123", 10);
 
   const sql = `
-    INSERT INTO users (firstname, lastname, email, password, api_key_id)
+    INSERT INTO users(firstname, lastname, email, password, api_key_id)
     VALUES (?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [firstname, lastname, email, hashed, apikey], err => {
-    if (err) return res.status(500).json({ error: "Gagal menyimpan user" });
+  db.query(sql, [firstname, lastname, email, defaultPassword, apikey], err => {
+    if (err) return res.status(500).json({ error: err });
     res.json({ success: true });
   });
 });
 
 /* =============================
-   ADMIN LOGIN & REGISTER
+   ADMIN REGISTER
 ============================= */
 app.post('/admin/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
-  if (!email || !password)
-    return res.status(400).json({ error: "Semua kolom wajib diisi" });
+  if (!name || !email || !password)
+    return res.status(400).json({ error: "Semua kolom harus diisi" });
 
   const hashed = await bcrypt.hash(password, 10);
 
-  const sql = "INSERT INTO admin (email, password) VALUES (?, ?)";
+  const sql = "INSERT INTO admins(name, email, password) VALUES (?, ?, ?)";
 
-  db.query(sql, [email, hashed], err => {
+  db.query(sql, [name, email, hashed], err => {
     if (err) return res.status(500).json({ error: "Gagal mendaftar admin" });
     res.json({ success: true });
   });
 });
 
+/* =============================
+   ADMIN LOGIN
+============================= */
 app.post('/admin/login', (req, res) => {
   const { email, password } = req.body;
 
-  db.query("SELECT * FROM admin WHERE email = ?", [email], async (err, results) => {
-    if (err || results.length === 0)
+  db.query("SELECT * FROM admins WHERE email = ?", [email], async (err, result) => {
+    if (err || result.length === 0)
       return res.status(400).json({ error: "Email atau password salah" });
 
-    const admin = results[0];
+    const admin = result[0];
+
     const valid = await bcrypt.compare(password, admin.password);
+    if (!valid) return res.status(400).json({ error: "Email atau password salah" });
 
-    if (!valid)
-      return res.status(400).json({ error: "Email atau password salah" });
-
-    res.json({ success: true, adminId: admin.id });
-  });
-});
-
-/* =============================
-   DELETE USER + API KEY
-============================= */
-app.delete('/admin/user/:id', (req, res) => {
-  const userId = req.params.id;
-
-  db.query("SELECT api_key_id FROM users WHERE id = ?", [userId], (err, results) => {
-    if (err || results.length === 0)
-      return res.status(404).json({ error: "User tidak ditemukan" });
-
-    const apiKeyId = results[0].api_key_id;
-
-    db.query("DELETE FROM users WHERE id = ?", (err) => {
-      if (err) return res.status(500).json({ error: "Gagal hapus user" });
-
-      db.query("DELETE FROM api_keys WHERE id = ?", [apiKeyId], (err) => {
-        if (err) return res.status(500).json({ error: "Gagal hapus API key" });
-
-        res.json({ success: true });
-      });
-    });
+    res.json({ success: true, adminId: admin.id, name: admin.name });
   });
 });
 
@@ -146,7 +134,8 @@ app.get('/admin/dashboard', (req, res) => {
       u.firstname,
       u.lastname,
       u.email,
-      a.api_key AS apiKey,
+      a.api_key,
+      a.created_at,
       CASE 
         WHEN a.created_at < NOW() - INTERVAL 30 DAY THEN 'off'
         ELSE 'on'
@@ -155,13 +144,16 @@ app.get('/admin/dashboard', (req, res) => {
     LEFT JOIN api_keys a ON a.id = u.api_key_id
   `;
 
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: "Gagal mengambil data" });
-    res.json({ users: results });
+  db.query(sql, (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+
+    res.json({ users: result });
   });
 });
 
 /* =============================
    START SERVER
 ============================= */
-app.listen(3000, () => console.log("🚀 Server running at http://localhost:3000"));
+app.listen(3000, () => {
+  console.log("🚀 Server berjalan di http://localhost:3000");
+});

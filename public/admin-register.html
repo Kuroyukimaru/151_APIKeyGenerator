@@ -5,56 +5,90 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Register</title>
+
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
         body {
             font-family: Poppins, sans-serif;
-            background: #ffe6f0;
+            height: 100vh;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+
+            background: radial-gradient(circle at 20% 20%, #2b1055, #000015 80%),
+                url("https://i.ibb.co/2SqcZ9K/stars2.png");
+            background-size: cover;
+            color: white;
         }
 
         .container {
-            background: #fff0f6;
+            background: rgba(20, 20, 40, 0.6);
             border-radius: 20px;
-            padding: 30px;
+            padding: 35px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
-            box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(120, 0, 255, 0.5),
+                0 0 40px rgba(0, 189, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        input,
+        h2 {
+            margin-bottom: 10px;
+            font-size: 26px;
+            color: #9ddcff;
+            text-shadow: 0 0 10px #5cd3ff;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            border: none;
+            outline: none;
+            background: rgba(255, 255, 255, 0.12);
+            color: #e8f7ff;
+            box-shadow: inset 0 0 10px rgba(0, 200, 255, 0.3);
+        }
+
+        input::placeholder {
+            color: #b9daf0;
+        }
+
         button {
             width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 14px;
+            padding: 12px;
+            margin-top: 18px;
+            font-size: 16px;
             border-radius: 10px;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: #ff4081;
-            color: white;
             border: none;
             cursor: pointer;
-            font-size: 16px;
+            background: linear-gradient(90deg, #4d00ff, #00b7ff);
+            color: white;
+            letter-spacing: 1px;
+            transition: 0.2s ease;
+            box-shadow: 0 0 15px rgba(0, 149, 255, 0.6);
         }
 
         button:hover {
-            background: #ff6699;
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 170, 255, 0.8);
         }
 
         #status {
-            margin-top: 10px;
+            margin-top: 12px;
             font-weight: bold;
+            color: #a7eaff;
+            min-height: 20px;
         }
 
         a {
-            color: #ff4081;
+            color: #7de3ff;
             text-decoration: none;
         }
     </style>
@@ -62,21 +96,27 @@
 
 <body>
     <div class="container">
-        <h2>Admin Register</h2>
-        <input type="email" id="email" placeholder="Email" />
+        <h2>🚀 Admin Register</h2>
+
+        <input type="text" id="name" placeholder="Nama Admin" />
+        <input type="email" id="email" placeholder="Email Admin" />
         <input type="password" id="password" placeholder="Password" />
-        <button onclick="register()">Register</button>
+
+        <button onclick="registerAdmin()">Register</button>
+
         <p id="status"></p>
+
         <p>Sudah punya akun? <a href="admin-login.html">Login di sini</a></p>
     </div>
 
     <script>
-        async function register() {
+        async function registerAdmin() {
+            const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             const status = document.getElementById('status');
 
-            if (!email || !password) {
+            if (!name || !email || !password) {
                 status.innerText = "❌ Semua kolom wajib diisi!";
                 return;
             }
@@ -85,13 +125,13 @@
                 const res = await fetch('/admin/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ name, email, password })
                 });
 
                 const data = await res.json();
 
                 if (data.success) {
-                    status.innerText = "✅ Registrasi berhasil! Silakan login.";
+                    status.innerText = "✅ Registrasi Admin Berhasil!";
                 } else {
                     status.innerText = "❌ " + data.error;
                 }

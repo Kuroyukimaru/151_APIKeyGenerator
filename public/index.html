@@ -5,125 +5,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buat User + API Key</title>
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #ffe6f0;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            background: radial-gradient(circle at 20% 20%, #1a1a2e, #000428);
+            background-size: cover;
+            color: white;
+        }
+
+        .stars {
+            width: 2px;
+            height: 2px;
+            background: white;
+            position: absolute;
+            animation: moveStars 6s linear infinite;
+        }
+
+        @keyframes moveStars {
+            from { transform: translateY(0); }
+            to { transform: translateY(100vh); }
         }
 
         .container {
-            background-color: #fff0f6;
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
             padding: 30px;
             width: 90%;
             max-width: 400px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 150, 255, 0.4);
             text-align: center;
-            box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2);
         }
 
         input {
             width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border: 2px solid #ff80ab;
+            padding: 12px;
+            margin-top: 12px;
             border-radius: 10px;
-            font-size: 14px;
-            box-sizing: border-box;
+            border: 2px solid #00d4ff;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
         }
 
         button {
-            background-color: #ff4081;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
             width: 100%;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background-color: #ff6699;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            color: white;
+            background: linear-gradient(45deg, #00d4ff, #008cff);
+            cursor: pointer;
+            font-weight: bold;
         }
 
         #status {
-            margin-top: 10px;
+            margin-top: 15px;
             font-weight: bold;
+            color: #00eaff;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Input User</h1>
 
-        <input type="text" id="firstname" placeholder="Nama Depan" />
-        <input type="text" id="lastname" placeholder="Nama Belakang" />
-        <input type="email" id="email" placeholder="Email" />
+<script>
+    for (let i = 0; i < 70; i++) {
+        let star = document.createElement("div");
+        star.classList.add("stars");
+        star.style.left = Math.random() * 100 + "vw";
+        star.style.top = Math.random() * 100 + "vh";
+        star.style.animationDuration = (Math.random() * 5 + 3) + "s";
+        star.style.opacity = Math.random();
+        document.body.appendChild(star);
+    }
+</script>
 
-        <button onclick="generateAPI()">🔑 Generate API Key</button>
+<div class="container">
+    <h2>Buat User + API Key</h2>
 
-        <input type="text" id="apikey" placeholder="API Key" readonly />
-        <input type="hidden" id="apiKeyId" />
+    <input type="text" id="firstname" placeholder="Nama Depan">
+    <input type="text" id="lastname" placeholder="Nama Belakang">
+    <input type="email" id="email" placeholder="Email">
 
-        <button onclick="saveUser()">💾 Save User</button>
+    <button onclick="generateAPI()">🔑 Generate API Key</button>
 
-        <p id="status"></p>
-    </div>
+    <input type="text" id="apikey" placeholder="API Key" readonly>
+    <input type="hidden" id="apiKeyId">
 
-    <script>
-        // 🔥 Generate API Key dari backend
-        async function generateAPI() {
-            const res = await fetch('/create', { method: 'POST' });
-            const data = await res.json();
+    <button onclick="saveUser()">💾 Simpan User</button>
 
-            if (data.success) {
-                document.getElementById('apikey').value = data.apiKey;
-                document.getElementById('apiKeyId').value = data.apiKeyId; // penting!
-            } else {
-                alert("Gagal membuat API Key");
-            }
+    <p id="status"></p>
+</div>
+
+<script>
+    async function generateAPI() {
+        const res = await fetch('/create', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+            document.getElementById('apikey').value = data.apiKey;
+            document.getElementById('apiKeyId').value = data.apiKeyId;
+        }
+    }
+
+    async function saveUser() {
+        const firstname = document.getElementById('firstname').value;
+        const lastname = document.getElementById('lastname').value;
+        const email = document.getElementById('email').value;
+        const apiKeyId = document.getElementById('apiKeyId').value;
+
+        if (!firstname || !lastname || !email) {
+            alert("Semua kolom harus diisi");
+            return;
         }
 
-        // 🔥 Simpan user
-        async function saveUser() {
-            const firstname = document.getElementById('firstname').value;
-            const lastname = document.getElementById('lastname').value;
-            const email = document.getElementById('email').value;
-            const apiKeyId = document.getElementById('apiKeyId').value;
-
-            if (!apiKeyId) {
-                alert("Generate API Key dulu");
-                return;
-            }
-
-            const res = await fetch('/user/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    firstname,
-                    lastname,
-                    email,
-                    apikey: apiKeyId   // backend minta ID, bukan string
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                alert("User berhasil disimpan");
-            } else {
-                alert("Error: " + data.error);
-            }
+        if (!apiKeyId) {
+            alert("Klik Generate API Key dulu");
+            return;
         }
-    </script>
+
+        const res = await fetch('/user/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                firstname,
+                lastname,
+                email,
+                apikey: apiKeyId
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            document.getElementById('status').innerText = "✔ User berhasil disimpan!";
+        } else {
+            document.getElementById('status').innerText = "❌ Error: " + data.error;
+        }
+    }
+</script>
+
 </body>
-
 </html>
