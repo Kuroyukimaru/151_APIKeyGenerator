@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buat User + API Key</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #ffe6f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff0f6;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 2px solid #ff80ab;
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff6699;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Input User</h1>
+
+        <input type="text" id="firstname" placeholder="Nama Depan" />
+        <input type="text" id="lastname" placeholder="Nama Belakang" />
+        <input type="email" id="email" placeholder="Email" />
+
+        <button onclick="generateAPI()">🔑 Generate API Key</button>
+
+        <input type="text" id="apikey" placeholder="API Key" readonly />
+        <input type="hidden" id="apiKeyId" />
+
+        <button onclick="saveUser()">💾 Save User</button>
+
+        <p id="status"></p>
+    </div>
+
+    <script>
+        // 🔥 Generate API Key dari backend
+        async function generateAPI() {
+            const res = await fetch('/create', { method: 'POST' });
+            const data = await res.json();
+
+            if (data.success) {
+                document.getElementById('apikey').value = data.apiKey;
+                document.getElementById('apiKeyId').value = data.apiKeyId; // penting!
+            } else {
+                alert("Gagal membuat API Key");
+            }
+        }
+
+        // 🔥 Simpan user
+        async function saveUser() {
+            const firstname = document.getElementById('firstname').value;
+            const lastname = document.getElementById('lastname').value;
+            const email = document.getElementById('email').value;
+            const apiKeyId = document.getElementById('apiKeyId').value;
+
+            if (!apiKeyId) {
+                alert("Generate API Key dulu");
+                return;
+            }
+
+            const res = await fetch('/user/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firstname,
+                    lastname,
+                    email,
+                    apikey: apiKeyId   // backend minta ID, bukan string
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("User berhasil disimpan");
+            } else {
+                alert("Error: " + data.error);
+            }
+        }
+    </script>
+</body>
+
+</html>
