@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login</title>
+    <style>
+        body {
+            font-family: Poppins, sans-serif;
+            background: #ffe6f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff0f6;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2);
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #ff4081;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #ff6699;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        a {
+            color: #ff4081;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Admin Login</h2>
+
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Password" />
+
+        <button onclick="login()">Login</button>
+
+        <p id="status"></p>
+
+        <p>Belum registrasi? <a href="admin-register.html">Register di sini</a></p>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const status = document.getElementById('status');
+
+            if (!email || !password) {
+                status.innerText = "❌ Semua kolom wajib diisi!";
+                return;
+            }
+
+            try {
+                const res = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('adminId', data.adminId);
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    status.innerText = "❌ " + data.error;
+                }
+            } catch (e) {
+                status.innerText = "⚠ Error: " + e.message;
+            }
+        }
+    </script>
+</body>
+
+</html>
