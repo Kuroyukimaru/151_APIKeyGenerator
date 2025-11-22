@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-pink-50 min-h-screen flex flex-col items-center p-6">
+
+    <h1 class="text-3xl font-bold mb-6 text-pink-600">Admin Dashboard</h1>
+
+    <div class="w-full max-w-5xl bg-white shadow-lg rounded-xl p-6">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-pink-100">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">ID</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Firstname</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Lastname</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Email</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">API Key</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Status</th>
+                    <th class="px-4 py-2 text-left text-sm font-medium text-pink-700">Action</th>
+                </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-gray-100"></tbody>
+        </table>
+
+        <button onclick="logout()"
+            class="mt-4 px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 transition">Logout</button>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/admin/dashboard');
+                const data = await res.json();
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = '';
+
+                data.users.forEach(user => {
+                    const tr = document.createElement('tr');
+
+                    const statusColor =
+                        user.status === 'on'
+                            ? 'bg-green-200 text-green-800'
+                            : 'bg-red-200 text-red-800';
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-2">${user.id}</td>
+                        <td class="px-4 py-2">${user.firstname}</td>
+                        <td class="px-4 py-2">${user.lastname}</td>
+                        <td class="px-4 py-2">${user.email}</td>
+                        <td class="px-4 py-2 break-words max-w-xs">${user.apiKey || '—'}</td>
+                        <td class="px-4 py-2 font-bold ${statusColor} rounded text-center">${user.status}</td>
+                        <td class="px-4 py-2">
+                            <button onclick="deleteUser(${user.id})"
+                                class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">Hapus</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm("Yakin ingin hapus user ini?")) return;
+
+            const res = await fetch(`/admin/user/${userId}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (data.success) loadDashboard();
+            else alert("Gagal hapus user");
+        }
+
+        function logout() {
+            fetch('/admin/logout', { method: 'POST' }).then(() => {
+                window.location.href = 'admin-login.html';
+            });
+        }
+
+        loadDashboard();
+    </script>
+
+</body>
+</html>
